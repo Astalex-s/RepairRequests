@@ -204,6 +204,7 @@ Create initial migration for users + requests + indexes.
 
 ----------------------------------------------------------------------------------------
 
+19/02/2026 17:59 мск
 Prompt 9 — backend: repositories (только SQL/DB операции)
 Make changes only in these files:
 backend/app/repositories/users.py (create)
@@ -216,6 +217,9 @@ UsersRepository: get_by_username, get_by_id, upsert_seed_users (or create_if_mis
 RequestsRepository: create_request_public, list_requests(filter), assign_master, cancel, list_for_master, take_in_work_atomic, mark_done.
 take_in_work_atomic must be implemented as ONE conditional UPDATE and return whether it succeeded.
 
+----------------------------------------------------------------------------------------
+
+19/02/2026 18:02 мск
 Prompt 10 — backend: services (бизнес-логика, проверки статусов)
 Make changes only in these files:
 backend/app/services/auth.py (create)
@@ -227,6 +231,8 @@ Tasks:
 AuthService: verify password, create access token, authenticate user (safe errors).
 RequestsService: enforce allowed transitions and call repository methods.
 Ensure 409 message for take race is RU and short: “Заявка уже взята в работу”.
+
+----------------------------------------------------------------------------------------
 
 Prompt 11 — backend: auth router + deps (JWT dispatcher/master)
 Make changes only in these files:

@@ -1,9 +1,26 @@
 from typing import Any
 
 from fastapi import Request
+from fastapi import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+
+class DomainError(HTTPException):
+    """Domain/business logic error for services. Router converts to JSON response."""
+
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str,
+        details: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            detail={"code": code, "message": message, "details": details},
+        )
 
 
 def error_response(
