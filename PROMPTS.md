@@ -234,6 +234,7 @@ Ensure 409 message for take race is RU and short: “Заявка уже взя�
 
 ----------------------------------------------------------------------------------------
 
+19/02/2026 18:07 мск
 Prompt 11 — backend: auth router + deps (JWT dispatcher/master)
 Make changes only in these files:
 backend/app/api/routers/auth.py (create)
@@ -247,6 +248,9 @@ POST /token (OAuth2PasswordRequestForm) -> Token response.
 GET /me -> current user.
 Dependencies: get_current_user, require_dispatcher, require_master.
 
+----------------------------------------------------------------------------------------
+
+19/02/2026 18:07 мск
 Prompt 12 — backend: public router (создание заявки без JWT)
 Make changes only in these files:
 backend/app/api/routers/requests_public.py (create)
