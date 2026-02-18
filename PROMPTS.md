@@ -1,4 +1,4 @@
-19/02/2026 17:13 мск  DONE
+18.02.2026 17:13 мск  DONE
 Prompt 0 — PROJECT RULES + .gitignore
 Make changes only in these files:
 .cursor/rules.md (create)
@@ -50,7 +50,7 @@ Documentation
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:20 мск  DONE
+18.02.2026 17:20 мск  DONE
 Prompt 1 — архитектура репо (контракт папок)
 Make changes only in these files:
 README.md
@@ -77,7 +77,7 @@ Add explicit rule text: everything used by frontend lives in frontend/src/; back
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:27 мск DONE
+18.02.2026 17:27 мск DONE
 Prompt 2 — infra: docker-compose (postgres + pgadmin + healthchecks)
 Make changes only in these files:
 docker-compose.yml (create or edit)
@@ -96,7 +96,7 @@ Do not add backend/frontend services yet in this prompt.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:29 мск DONE
+18.02.2026 17:29 мск DONE
 Prompt 3 — backend контейнер: Dockerfile + entrypoint (автомиграции)
 Make changes only in these files:
 backend/Dockerfile (create)
@@ -121,7 +121,7 @@ IMPORTANT: Do NOT seed users here; seed must be a separate script/command step (
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:35 мск DONE
+18.02.2026 17:35 мск DONE
 Prompt 4 — backend: зависимости + settings + app/main.py + единый формат ошибок
 Make changes only in these files:
 backend/pyproject.toml (create)
@@ -142,7 +142,7 @@ and validation errors are also mapped to this format.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:40 мск DONE
+18.02.2026 17:40 мск DONE
 Prompt 5 — backend: db engine/session/base
 Make changes only in these files:
 backend/app/db/engine.py (create)
@@ -158,7 +158,7 @@ Keep it modular; no business logic here.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:45 мск DONE
+18.02.2026 17:45 мск DONE
 Prompt 6 — backend: models
 Make changes only in these files:
 backend/app/models/user.py (create)
@@ -172,7 +172,7 @@ Use created_at/updated_at timestamps.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:52 мск DONE
+18.02.2026 17:52 мск DONE
 Prompt 7 — backend: schemas (Create/Update/Read раздельно)
 Make changes only in these files:
 backend/app/schemas/auth.py (create)
@@ -188,7 +188,7 @@ Keep field names in API as specified in ТЗ (clientName, problemText, assignedT
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:57 мск
+18.02.2026 17:57 мск
 Prompt 8 — Alembic config + initial migration
 Make changes only in these files:
 backend/alembic.ini (create)
@@ -204,7 +204,7 @@ Create initial migration for users + requests + indexes.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 17:59 мск
+18.02.2026 17:59 мск
 Prompt 9 — backend: repositories (только SQL/DB операции)
 Make changes only in these files:
 backend/app/repositories/users.py (create)
@@ -219,7 +219,7 @@ take_in_work_atomic must be implemented as ONE conditional UPDATE and return whe
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:02 мск
+18.02.2026 18:02 мск
 Prompt 10 — backend: services (бизнес-логика, проверки статусов)
 Make changes only in these files:
 backend/app/services/auth.py (create)
@@ -234,7 +234,7 @@ Ensure 409 message for take race is RU and short: “Заявка уже взя�
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:07 мск
+18.02.2026 18:07 мск
 Prompt 11 — backend: auth router + deps (JWT dispatcher/master)
 Make changes only in these files:
 backend/app/api/routers/auth.py (create)
@@ -250,7 +250,7 @@ Dependencies: get_current_user, require_dispatcher, require_master.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:10 мск
+18.02.2026 18:10 мск
 Prompt 12 — backend: public router (создание заявки без JWT)
 Make changes only in these files:
 backend/app/api/routers/requests_public.py (create)
@@ -262,7 +262,7 @@ Implement POST /requests публично (no JWT), validate required fields via
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:11 мск
+18.02.2026 18:11 мск
 Prompt 13 — backend: dispatcher router (JWT + dispatcher)
 Make changes only in these files:
 backend/app/api/routers/requests_dispatcher.py (create)
@@ -277,7 +277,7 @@ Use require_dispatcher dependency.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:13 мск
+18.02.2026 18:13 мск
 Prompt 14 — backend: master router (JWT + master) + гонка
 Make changes only in these files:
 backend/app/api/routers/requests_master.py (create)
@@ -293,7 +293,7 @@ Ensure take returns 409 with message “Заявка уже взята в раб
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:15 мск
+18.02.2026 18:15 мск
 Prompt 15 — seed script (отдельно от миграций, но автозапуск после)
 Make changes only in these files:
 backend/app/seed.py (create)
@@ -308,7 +308,7 @@ README: list dev credentials and mark as dev-only.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:25 мск
+18.02.2026 18:25 мск
 Prompt 16 — frontend: стиль и каркас
 Make changes only in these files:
 frontend/package.json (create)
@@ -383,8 +383,9 @@ Output requirements:
 At the top of theme.css, add a short comment explaining token groups (primitive vs semantic) and the intended laconic style.
 Do not reference external fonts or CDNs; use system font stacks only.
 
+----------------------------------------------------------------------------------------
 
-
+## 18.02.2026 18:31 мск
 Prompt 17 — frontend: api client + страницы
 Make changes only in these files:
 frontend/src/api/client.ts (create)
