@@ -293,6 +293,7 @@ Ensure take returns 409 with message “Заявка уже взята в раб
 
 ----------------------------------------------------------------------------------------
 
+19/02/2026 18:15 мск
 Prompt 15 — seed script (отдельно от миграций, но автозапуск после)
 Make changes only in these files:
 backend/app/seed.py (create)
@@ -305,7 +306,10 @@ Implement python -m app.seed that creates dev users if missing (dispatcher1, mas
 Update entrypoint.sh to run seed after alembic upgrade head (as a separate step).
 README: list dev credentials and mark as dev-only.
 
-Prompt 16 — frontend: стиль и каркас “как download.kodacode.ru”
+----------------------------------------------------------------------------------------
+
+19/02/2026 18:25 мск
+Prompt 16 — frontend: стиль и каркас
 Make changes only in these files:
 frontend/package.json (create)
 frontend/vite.config.ts (create)
@@ -313,19 +317,73 @@ frontend/index.html (create)
 frontend/src/main.tsx (create)
 frontend/src/App.tsx (create)
 frontend/src/styles/theme.css (create)
-Use the connected MCP context (context7) for React+Vite scaffolding.
-Follow PROJECT RULES (Cursor): frontend code only in frontend/src/**.
-UI requirement:
-Create a laconic UI inspired by 
-https://download.kodacode.ru/
- :
-minimal layout, lots of whitespace
-clean typography, simple primary button, subtle inputs
-avoid heavy UI kits
-Keep it consistent across pages.
+Use the connected MCP context (context7) for React+Vite scaffolding and best practices for design tokens using CSS variables.
+Follow PROJECT RULES (Cursor): frontend code only in frontend/src/**, do not introduce any UI libraries (no Tailwind/MUI/Ant/etc.), keep the architecture modular (src/pages, src/components, src/api, src/styles).
+UI design requirement (laconic, typography-first):
+Single centered layout with lots of whitespace.
+Clean system typography; minimal palette; subtle borders; simple CTA buttons/links.
+No heavy visuals, no complex card UI; rely on spacing and typography for hierarchy.
+Important instructions/tokens/commands should be shown in neat monospace blocks.
 Tasks:
-Implement base layout component (header + centered container).
-Add global CSS theme in theme.css.
+Scaffold a minimal React + Vite + TypeScript app in frontend/ with the file structure implied above.
+Implement the app shell:
+A simple header with the app name on the left and minimal navigation links on the right: “Create request”, “Login”, “Dispatcher”, “Master”.
+A centered .container layout wrapping the main content.
+Create frontend/src/styles/theme.css and implement a token-based theme using CSS variables with two layers:
+Primitive tokens (raw values): colors, spacing scale, font families, font sizes, radii, shadows.
+Semantic tokens (usage-based): background, foreground, muted text, border, primary button, focus ring, input background, table row hover, code block background.
+Define a light theme only (no dark mode required).
+Add base element styles for: html, body, a, button, input, textarea, select, table, th, td.
+Add a small set of utility/component classes that pages will reuse:
+.container (centered, max-width)
+.stack (vertical spacing)
+.row (horizontal alignment for small toolbars)
+.card (very subtle, nearly flat)
+.btn, .btn-primary, .btn-ghost
+.field, .label, .help, .error
+.table
+.badge (for statuses)
+.codeblock (monospace instruction blocks)
+Ensure accessibility basics:
+Visible :focus-visible ring using a token
+Sufficient contrast for text
+Subtle hover/active states
+Token requirements (must be defined as CSS variables in theme.css):
+Typography:
+--font-sans: system-ui stack
+--font-mono: ui-monospace stack
+--font-size-0 .. --font-size-4 (e.g., 12/14/16/20/28px)
+--line-height: base line height (e.g., 1.5–1.6)
+Spacing scale (8px-based):
+--space-1 .. --space-8 (e.g., 4/8/12/16/24/32/48/64px)
+Layout:
+-container-max: e.g., 960–1040px
+Colors (neutral, minimal palette):
+--color-bg, --color-fg
+--color-muted, --color-border
+--color-primary, --color-primary-hover
+--color-danger
+--color-code-bg
+Radius & shadow (very subtle):
+--radius-1, --radius-2
+--shadow-1 (barely visible)
+Controls:
+--control-height
+--control-padding-x, --control-padding-y
+Focus:
+--focus-ring (color)
+--focus-ring-width (e.g., 2px)
+Component styling requirements:
+Buttons: flat, minimal border, small radius, medium padding; primary button uses --color-primary.
+Inputs/Textareas: white background, subtle border, same height as buttons, consistent padding; no heavy shadows.
+Tables: simple borders, optional very light zebra; subtle row hover.
+Badges: small rounded pill with neutral background; status colors muted (avoid bright).
+Code blocks: monospace, slightly tinted background, border, padding; suitable for “copyable instruction blocks”.
+Output requirements:
+At the top of theme.css, add a short comment explaining token groups (primitive vs semantic) and the intended laconic style.
+Do not reference external fonts or CDNs; use system font stacks only.
+
+
 
 Prompt 17 — frontend: api client + страницы
 Make changes only in these files:

@@ -47,7 +47,7 @@ docker compose up -d
 
 Сервисы: postgres (порт 5432), pgadmin (порт 5050), backend (порт 8000). Volumes и healthchecks включены.
 
-**Миграции выполняются автоматически при старте backend** (alembic upgrade head в entrypoint).
+**Миграции и сиды выполняются автоматически при старте backend** (alembic upgrade head, затем python -m app.seed).
 
 #### Подключение через pgAdmin
 
@@ -83,12 +83,15 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## Тестовые пользователи (только dev)
 
-| Роль   | Логин | Пароль (только для dev) |
-|--------|-------|-------------------------|
-| admin  | admin | см. сиды / README dev   |
-| master | master| см. сиды / README dev   |
+**⚠️ Только для разработки. В продакшене не использовать.**
 
-В прод-описании исходные пароли не указывать. В сидах хранится только `password_hash`.
+| Роль      | Логин      | Пароль |
+|-----------|------------|--------|
+| dispatcher| dispatcher1| dev123 |
+| master    | master1    | dev123 |
+| master    | master2    | dev123 |
+
+Сиды создают пользователей при первом запуске (`python -m app.seed`). В БД хранится только `password_hash`.
 
 ## Проверка гонки (take in work)
 
