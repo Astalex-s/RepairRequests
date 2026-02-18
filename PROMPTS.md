@@ -150,3 +150,29 @@ Implement async_sessionmaker and get_db dependency (commit/rollback).
 Keep it modular; no business logic here.
 
 
+19/02/2026 17:45 мск
+Prompt 6 — backend: models
+Make changes only in these files:
+backend/app/models/user.py (create)
+backend/app/models/request.py (create)
+backend/app/models/init.py (create)
+Use the connected MCP context (context7) for SQLAlchemy model patterns.
+Follow PROJECT RULES (Cursor).
+Tasks:
+Create models User and Request with all fields from ТЗ, indexes, FK.
+Use created_at/updated_at timestamps.
+
+
+19/02/2026 17:45 мск
+Prompt 7 — backend: schemas (Create/Update/Read раздельно)
+Make changes only in these files:
+backend/app/schemas/auth.py (create)
+backend/app/schemas/requests.py (create)
+backend/app/schemas/users.py (create)
+backend/app/schemas/init.py (create)
+Use the connected MCP context (context7) for Pydantic v2 DTO patterns.
+Follow PROJECT RULES (Cursor): separate schemas for Create/Update/Read.
+Tasks:
+Requests: RequestCreate, RequestRead, RequestAssign, RequestStatusUpdate (if needed).
+Users/Auth: Token response schema, UserRead.
+Keep field names in API as specified in ТЗ (clientName, problemText, assignedTo, etc.), map to DB snake_case internally.

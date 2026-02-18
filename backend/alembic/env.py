@@ -5,11 +5,14 @@ from alembic import context
 from sqlalchemy import create_engine
 from sqlalchemy import pool
 
+from app.db.base import Base
+from app.models import RepairRequest, User
+
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = None
+target_metadata = Base.metadata
 
 database_url = os.getenv(
     "DATABASE_URL",
