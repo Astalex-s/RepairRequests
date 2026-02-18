@@ -40,7 +40,20 @@ class RequestRead(BaseModel):
         if isinstance(data, dict):
             return data
         if hasattr(data, "master") and data.master is not None:
-            d = {k: getattr(data, k, None) for k in ("id", "client_name", "client_phone", "description", "address", "status", "master_id", "created_at", "updated_at")}
+            d = {
+                k: getattr(data, k, None)
+                for k in (
+                    "id",
+                    "client_name",
+                    "client_phone",
+                    "description",
+                    "address",
+                    "status",
+                    "master_id",
+                    "created_at",
+                    "updated_at",
+                )
+            }
             d["assigned_to_username"] = data.master.username
             return d
         return data

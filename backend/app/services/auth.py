@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import bcrypt
-from jose import JWTError, jwt
+from jose import jwt
 
 from app.core.settings import settings
 from app.models import User

@@ -133,13 +133,28 @@ $env:BASE_URL="http://localhost:8000"; .\scripts\race_test.ps1
 
 **Проверка вручную (2 терминала):** создайте заявку, получите токены master1/master2, в двух терминалах одновременно выполните `curl -X PATCH .../requests/{id}/take` с разными токенами. Ожидается один 200, другой 409 или 400.
 
+## Backend tests
+
+```bash
+# В backend venv (Python 3.12+)
+cd backend && pip install -e ".[dev]" && python -m pytest -v
+```
+
+Через Docker (без PostgreSQL):
+
+```bash
+docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pytest pytest-asyncio httpx aiosqlite -q && DATABASE_URL=sqlite+aiosqlite:///:memory: JWT_SECRET_KEY=test python -m pytest tests/ -v"
+```
+
+Тесты: health, создание заявки, auth (валидный/невалидный токен).
+
 ## Quality gates (перед коммитом)
 
 ```bash
 ./scripts/check.sh
 ```
 
-Запускает: black, ruff, pytest (backend), npm run build (frontend). Требует: `pip install black ruff pytest` в venv backend.
+Запускает: black, ruff, pytest (backend), npm run build (frontend). Требует: `pip install -e ".[dev]"` в venv backend (Python 3.12+).
 
 ```bash
 ./scripts/commit_checked.sh "сообщение коммита"

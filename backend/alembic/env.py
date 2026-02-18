@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import pool
 
 from app.db.base import Base
-from app.models import RepairRequest, User
+from app.models import RepairRequest, User  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
@@ -19,6 +19,7 @@ database_url = os.getenv("DATABASE_URL")
 if not database_url:
     try:
         from app.core.settings import settings
+
         database_url = settings.DATABASE_URL
     except Exception:
         database_url = config.get_main_option("sqlalchemy.url")

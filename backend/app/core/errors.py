@@ -53,7 +53,9 @@ async def http_exception_handler(
         message = "Неверный логин или пароль"
         details = None
 
-    return error_response(code=code, message=message, details=details, status_code=exc.status_code)
+    return error_response(
+        code=code, message=message, details=details, status_code=exc.status_code
+    )
 
 
 async def validation_exception_handler(

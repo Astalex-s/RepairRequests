@@ -26,7 +26,10 @@ async def login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "invalid_credentials", "message": "Неверный логин или пароль"},
+            detail={
+                "code": "invalid_credentials",
+                "message": "Неверный логин или пароль",
+            },
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = auth_service.create_access_token(user)

@@ -1,5 +1,5 @@
 18.02.2026 17:13 мск  DONE
-Prompt 0 — PROJECT RULES + .gitignore
+Prompt 0 - PROJECT RULES + .gitignore
 Make changes only in these files:
 .cursor/rules.md (create)
 .gitignore (create)
@@ -51,7 +51,7 @@ Documentation
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:20 мск  DONE
-Prompt 1 — архитектура репо (контракт папок)
+Prompt 1 - архитектура репо (контракт папок)
 Make changes only in these files:
 README.md
 Use the connected MCP context (context7) to propose a clean folder structure for a monorepo FastAPI + React + Docker that matches our PROJECT RULES (Cursor).
@@ -78,7 +78,7 @@ Add explicit rule text: everything used by frontend lives in frontend/src/; back
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:27 мск DONE
-Prompt 2 — infra: docker-compose (postgres + pgadmin + healthchecks)
+Prompt 2 - infra: docker-compose (postgres + pgadmin + healthchecks)
 Make changes only in these files:
 docker-compose.yml (create or edit)
 .env.example (create or edit)
@@ -97,7 +97,7 @@ Do not add backend/frontend services yet in this prompt.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:29 мск DONE
-Prompt 3 — backend контейнер: Dockerfile + entrypoint (автомиграции)
+Prompt 3 - backend контейнер: Dockerfile + entrypoint (автомиграции)
 Make changes only in these files:
 backend/Dockerfile (create)
 backend/entrypoint.sh (create)
@@ -122,7 +122,7 @@ IMPORTANT: Do NOT seed users here; seed must be a separate script/command step (
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:35 мск DONE
-Prompt 4 — backend: зависимости + settings + app/main.py + единый формат ошибок
+Prompt 4 - backend: зависимости + settings + app/main.py + единый формат ошибок
 Make changes only in these files:
 backend/pyproject.toml (create)
 backend/app/main.py (create)
@@ -143,7 +143,7 @@ and validation errors are also mapped to this format.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:40 мск DONE
-Prompt 5 — backend: db engine/session/base
+Prompt 5 - backend: db engine/session/base
 Make changes only in these files:
 backend/app/db/engine.py (create)
 backend/app/db/session.py (create)
@@ -159,7 +159,7 @@ Keep it modular; no business logic here.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:45 мск DONE
-Prompt 6 — backend: models
+Prompt 6 - backend: models
 Make changes only in these files:
 backend/app/models/user.py (create)
 backend/app/models/request.py (create)
@@ -173,7 +173,7 @@ Use created_at/updated_at timestamps.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:52 мск DONE
-Prompt 7 — backend: schemas (Create/Update/Read раздельно)
+Prompt 7 - backend: schemas (Create/Update/Read раздельно)
 Make changes only in these files:
 backend/app/schemas/auth.py (create)
 backend/app/schemas/requests.py (create)
@@ -189,7 +189,7 @@ Keep field names in API as specified in ТЗ (clientName, problemText, assignedT
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:57 мск
-Prompt 8 — Alembic config + initial migration
+Prompt 8 - Alembic config + initial migration
 Make changes only in these files:
 backend/alembic.ini (create)
 backend/alembic/env.py (create)
@@ -205,7 +205,7 @@ Create initial migration for users + requests + indexes.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 17:59 мск
-Prompt 9 — backend: repositories (только SQL/DB операции)
+Prompt 9 - backend: repositories (только SQL/DB операции)
 Make changes only in these files:
 backend/app/repositories/users.py (create)
 backend/app/repositories/requests.py (create)
@@ -220,7 +220,7 @@ take_in_work_atomic must be implemented as ONE conditional UPDATE and return whe
 ----------------------------------------------------------------------------------------
 
 18.02.2026 18:02 мск
-Prompt 10 — backend: services (бизнес-логика, проверки статусов)
+Prompt 10 - backend: services (бизнес-логика, проверки статусов)
 Make changes only in these files:
 backend/app/services/auth.py (create)
 backend/app/services/requests.py (create)
@@ -235,7 +235,7 @@ Ensure 409 message for take race is RU and short: “Заявка уже взя�
 ----------------------------------------------------------------------------------------
 
 18.02.2026 18:07 мск
-Prompt 11 — backend: auth router + deps (JWT dispatcher/master)
+Prompt 11 - backend: auth router + deps (JWT dispatcher/master)
 Make changes only in these files:
 backend/app/api/routers/auth.py (create)
 backend/app/core/security.py (create)
@@ -251,7 +251,7 @@ Dependencies: get_current_user, require_dispatcher, require_master.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 18:10 мск
-Prompt 12 — backend: public router (создание заявки без JWT)
+Prompt 12 - backend: public router (создание заявки без JWT)
 Make changes only in these files:
 backend/app/api/routers/requests_public.py (create)
 backend/app/main.py
@@ -263,7 +263,7 @@ Implement POST /requests публично (no JWT), validate required fields via
 ----------------------------------------------------------------------------------------
 
 18.02.2026 18:11 мск
-Prompt 13 — backend: dispatcher router (JWT + dispatcher)
+Prompt 13 - backend: dispatcher router (JWT + dispatcher)
 Make changes only in these files:
 backend/app/api/routers/requests_dispatcher.py (create)
 backend/app/main.py
@@ -278,7 +278,7 @@ Use require_dispatcher dependency.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 18:13 мск
-Prompt 14 — backend: master router (JWT + master) + гонка
+Prompt 14 - backend: master router (JWT + master) + гонка
 Make changes only in these files:
 backend/app/api/routers/requests_master.py (create)
 backend/app/main.py
@@ -294,7 +294,7 @@ Ensure take returns 409 with message “Заявка уже взята в раб
 ----------------------------------------------------------------------------------------
 
 18.02.2026 18:15 мск
-Prompt 15 — seed script (отдельно от миграций, но автозапуск после)
+Prompt 15 - seed script (отдельно от миграций, но автозапуск после)
 Make changes only in these files:
 backend/app/seed.py (create)
 backend/entrypoint.sh
@@ -309,7 +309,7 @@ README: list dev credentials and mark as dev-only.
 ----------------------------------------------------------------------------------------
 
 18.02.2026 18:25 мск
-Prompt 16 — frontend: стиль и каркас
+Prompt 16 - frontend: стиль и каркас
 Make changes only in these files:
 frontend/package.json (create)
 frontend/vite.config.ts (create)
@@ -386,7 +386,7 @@ Do not reference external fonts or CDNs; use system font stacks only.
 ----------------------------------------------------------------------------------------
 
 ## 18.02.2026 18:31 мск
-Prompt 17 — frontend: api client + страницы
+Prompt 17 - frontend: api client + страницы
 Make changes only in these files:
 frontend/src/api/client.ts (create)
 frontend/src/pages/PublicCreateRequest.tsx (create)
@@ -407,7 +407,7 @@ UI must match laconic theme (reuse same input/button styles).
 ----------------------------------------------------------------------------------------
 
 ## 18.02.2026 18:36 мск
-Prompt 18 — frontend Docker + compose wiring + README smoke tests + scripts
+Prompt 18 - frontend Docker + compose wiring + README smoke tests + scripts
 Make changes only in these files:
 frontend/Dockerfile (create)
 docker-compose.yml
@@ -428,7 +428,7 @@ Add scripts/commit_checked.sh that runs check.sh and then commits with a short R
 ----------------------------------------------------------------------------------------
 
 ## 18.02.2026 18:45 мск
-Prompt 19 — DECISIONS.md (6 решений)
+Prompt 19 - DECISIONS.md (6 решений)
 Make changes only in these files:
 DECISIONS.md (create)
 Use the connected MCP context (context7) before writing to confirm best-practice phrasing for: FastAPI clean architecture layering, Docker entrypoint migrations, Postgres concurrency control with conditional UPDATE, and minimal React UI without component libraries.
@@ -456,7 +456,7 @@ After writing DECISIONS.md, output a short summary: what decisions were captured
 ----------------------------------------------------------------------------------------
 
 ## 18.02.2026 19:45 мск
-Prompt 20 — error fix
+Prompt 20 - error fix
 Fix the following issues in the RepairRequests application (FastAPI, React, PostgreSQL, Docker):
 When logging in as any user, the app returns a “not found” error. Login must work correctly.
 Remove role selection on the login screen. After login, open the workspace for the authenticated user immediately: a master should be redirected to the master dashboard, and a dispatcher should be redirected to the dispatcher dashboard, without any additional selection.
@@ -467,3 +467,44 @@ When assigning a master to a request, a 500 error occurs due to MissingGreenlet 
 Requests assigned to a master must be visible in the master dashboard. Check statuses and filtering by master_id.
 Use the in_progress status instead of in_work for requests that are in progress.
 
+----------------------------------------------------------------------------------------
+
+## 18.02.2026 20:15 мск
+Prompt 21 - Create a race condition test script for the "take in work" API
+Create a script that verifies the race condition handling when two masters try to take the same repair request at the same time.
+Requirements:
+Create a new repair request via POST /requests with body: {"clientName":"RaceTest","clientPhone":"+7","problemText":"Race test"}.
+Obtain JWT tokens for master1 and master2 via POST /auth/token (form-urlencoded: username, password = dev123).
+Send two parallel PATCH /requests/{id}/take requests with Authorization: Bearer <token> — one per master.
+The test passes if one response is 200 and the other is 409 or 400.
+Use BASE_URL env var for the API base URL (default: http://localhost:5173/api for Docker dev).
+Exit with code 0 on success, 1 on failure.
+Print clear PASS/FAIL output with the HTTP status codes.
+Implementations:
+Bash (scripts/race_test.sh): use curl and background jobs; use $TMPDIR for temp files.
+PowerShell (scripts/race_test.ps1): use Invoke-WebRequest and Start-Job; handle 4xx without throwing (e.g. try/catch or -SkipHttpErrorCheck if available).
+Context: The API uses atomic updates so only one master can take a request; the other gets 409 (already taken) or 400 (invalid transition).
+
+----------------------------------------------------------------------------------------
+
+## 18.02.2026 20:46 мск
+Prompt 22 - Add 2–3 backend autotests with pytest
+Add backend autotests for the RepairRequests FastAPI app. Use pytest and pytest-asyncio.
+Setup:
+Add pytest, pytest-asyncio, and httpx to backend dependencies (e.g. in pyproject.toml or requirements-dev.txt).
+Create backend/tests/ with conftest.py that:
+Defines async_client fixture using httpx.AsyncClient(app=app.main:app).
+Overrides get_db to use an in-memory SQLite DB or a test PostgreSQL DB so tests don’t touch the real DB.
+Ensure scripts/check.sh runs pytest and fails if there are no tests (remove the “no tests OK” fallback).
+Implement 2–3 tests:
+test_health_returns_ok
+GET /health returns 200 and {"status": "ok"}.
+test_create_request_public
+POST /requests with body {"clientName":"Test","clientPhone":"+7","problemText":"Test problem"} returns 200, JSON includes id, status = "new", and clientName = "Test".
+test_auth_token_valid_and_invalid (or split into two tests):
+Valid: POST /auth/token with username=master1, password=dev123 returns 200 and JSON with accessToken.
+Invalid: same endpoint with wrong password returns 401.
+Constraints:
+Use async fixtures where needed (@pytest.fixture with scope="function").
+Run seed before auth tests if users come from seed, or create a test user in the fixture.
+Keep tests independent and isolated (no shared mutable state).

@@ -1,4 +1,5 @@
 """Seed dev users. Run: python -m app.seed. Dev-only."""
+
 import asyncio
 
 import bcrypt
