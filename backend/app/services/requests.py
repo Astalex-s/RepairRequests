@@ -5,8 +5,10 @@ from app.models import RepairRequest
 from app.repositories import RequestFilter, RequestsRepository
 
 # Allowed status transitions: from_status -> [to_statuses]
+# assigned = dispatcher assigned to master; in_progress = master working
 _ALLOWED_TRANSITIONS: dict[str, set[str]] = {
-    "new": {"in_progress", "cancelled"},
+    "new": {"assigned", "in_progress", "cancelled"},
+    "assigned": {"in_progress", "cancelled"},
     "in_progress": {"done", "cancelled"},
     "cancelled": set(),
     "done": set(),
@@ -52,14 +54,20 @@ class RequestsService:
         return await self._repo.get_by_id(request_id)
 
     async def take_in_work(self, request_id: int, master_id: int) -> RepairRequest:
-        """Atomically take request in work. Raises DomainError 409 if already taken."""
-        ok = await self._repo.take_in_work_atomic(request_id, master_id)
-        if not ok:
-            raise DomainError(409, "request_already_taken", MSG_ALREADY_TAKEN)
+        """Take request: either atomic take from 'new' pool, or start 'assigned' request."""
         req = await self._repo.get_by_id(request_id)
         if not req:
             raise DomainError(404, "not_found", MSG_REQUEST_NOT_FOUND)
-        return req
+        if req.status == "assigned" and req.master_id == master_id:
+            updated = await self._repo.start_assigned_request(request_id, master_id)
+            return updated
+        if req.status == "new":
+            ok = await self._repo.take_in_work_atomic(request_id, master_id)
+            if not ok:
+                raise DomainError(409, "request_already_taken", MSG_ALREADY_TAKEN)
+            req = await self._repo.get_by_id(request_id)
+            return req
+        raise DomainError(400, "invalid_transition", MSG_INVALID_TRANSITION)
 
     async def assign_master(
         self,
@@ -69,7 +77,7 @@ class RequestsService:
         req = await self._repo.get_by_id(request_id)
         if not req:
             raise DomainError(404, "not_found", MSG_REQUEST_NOT_FOUND)
-        self._check_transition(req.status, "in_progress")
+        self._check_transition(req.status, "assigned")
         updated = await self._repo.assign_master(request_id, master_id)
         if not updated:
             raise DomainError(404, "not_found", MSG_REQUEST_NOT_FOUND)

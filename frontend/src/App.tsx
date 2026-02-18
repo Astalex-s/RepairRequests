@@ -1,9 +1,28 @@
+import { useState, useEffect } from "react";
 import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { api } from "./api/client";
 import { isAuthenticated, clearToken } from "./api/client";
 import { PublicCreateRequest } from "./pages/PublicCreateRequest";
 import { Login } from "./pages/Login";
 import { DispatcherDashboard } from "./pages/DispatcherDashboard";
 import { MasterDashboard } from "./pages/MasterDashboard";
+
+function useUserRole() {
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+    api
+      .get<{ role: string }>("/auth/me")
+      .then((me) => setRole(me.role))
+      .catch(() => setRole(null))
+      .finally(() => setLoading(false));
+  }, []);
+  return { role, loading };
+}
 
 function App() {
   return (
@@ -32,12 +51,11 @@ function App() {
               Login
             </Link>
           )}
-          <Link to="/dispatcher" className="nav-link">
-            Dispatcher
-          </Link>
-          <Link to="/master" className="nav-link">
-            Master
-          </Link>
+          {isAuthenticated() && (
+            <Link to="/" className="nav-link">
+              Панель
+            </Link>
+          )}
         </nav>
       </header>
 
@@ -49,7 +67,7 @@ function App() {
           <Route
             path="/dispatcher"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireRole="dispatcher">
                 <DispatcherDashboard />
               </ProtectedRoute>
             }
@@ -57,7 +75,7 @@ function App() {
           <Route
             path="/master"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireRole="master">
                 <MasterDashboard />
               </ProtectedRoute>
             }
@@ -70,23 +88,48 @@ function App() {
 
 function HomePage() {
   const location = useLocation();
+  const { role, loading } = useUserRole();
   const message = (location.state as { message?: string })?.message;
+
+  if (isAuthenticated()) {
+    if (loading) return <p className="muted">Загрузка…</p>;
+    if (role === "master") return <Navigate to="/master" replace />;
+    if (role === "dispatcher") return <Navigate to="/dispatcher" replace />;
+  }
 
   return (
     <div className="stack stack--lg">
       <h1>RepairRequests</h1>
       {message && <p className="muted">{message}</p>}
       <p className="muted">
-        Система управления заявками на ремонт. Создайте заявку, войдите как диспетчер или мастер.
+        Система управления заявками на ремонт. Создайте заявку или войдите в систему.
       </p>
     </div>
   );
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({
+  children,
+  requireRole,
+}: {
+  children: React.ReactNode;
+  requireRole?: "dispatcher" | "master";
+}) {
+  const { role: userRole, loading } = useUserRole();
+
   if (!isAuthenticated()) {
     return <Navigate to="/login" state={{ from: { pathname: window.location.pathname } }} replace />;
   }
+
+  if (loading) {
+    return <p className="muted">Загрузка…</p>;
+  }
+
+  if (requireRole && userRole !== requireRole) {
+    const redirectTo = userRole === "master" ? "/master" : "/dispatcher";
+    return <Navigate to={redirectTo} replace />;
+  }
+
   return <>{children}</>;
 }
 

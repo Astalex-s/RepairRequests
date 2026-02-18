@@ -21,7 +21,6 @@ export function Login() {
       const res = await api.postForm<{ accessToken: string }>("/auth/token", formData);
       setToken(res.accessToken);
       navigate("/");
-      window.location.reload();
     } catch (err) {
       setError(err instanceof ClientError ? err.body.message : "Ошибка входа");
     } finally {

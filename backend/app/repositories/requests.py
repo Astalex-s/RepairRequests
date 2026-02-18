@@ -2,6 +2,7 @@ from typing import Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import RepairRequest
 
@@ -45,7 +46,11 @@ class RequestsRepository:
         self,
         filter_: Optional[RequestFilter] = None,
     ) -> list[RepairRequest]:
-        stmt = select(RepairRequest).order_by(RepairRequest.created_at.desc())
+        stmt = (
+            select(RepairRequest)
+            .options(selectinload(RepairRequest.master))
+            .order_by(RepairRequest.created_at.desc())
+        )
         if filter_:
             if filter_.status is not None:
                 stmt = stmt.where(RepairRequest.status == filter_.status)
@@ -68,7 +73,7 @@ class RequestsRepository:
         if not req:
             return None
         req.master_id = master_id
-        req.status = "in_progress"
+        req.status = "assigned"
         await self._session.flush()
         await self._session.refresh(req)
         return req
@@ -90,7 +95,7 @@ class RequestsRepository:
         request_id: int,
         master_id: int,
     ) -> bool:
-        """One conditional UPDATE. Returns True if assignment succeeded."""
+        """One conditional UPDATE for 'new' requests. Returns True if succeeded."""
         stmt = (
             update(RepairRequest)
             .where(
@@ -102,6 +107,20 @@ class RequestsRepository:
         )
         result = await self._session.execute(stmt)
         return result.rowcount > 0
+
+    async def start_assigned_request(
+        self,
+        request_id: int,
+        master_id: int,
+    ) -> Optional[RepairRequest]:
+        """Transition 'assigned' to 'in_progress' when master_id matches."""
+        req = await self.get_by_id(request_id)
+        if not req or req.status != "assigned" or req.master_id != master_id:
+            return None
+        req.status = "in_progress"
+        await self._session.flush()
+        await self._session.refresh(req)
+        return req
 
     async def mark_done(self, request_id: int) -> Optional[RepairRequest]:
         req = await self.get_by_id(request_id)

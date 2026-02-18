@@ -452,3 +452,18 @@ Keep the whole file under ~200 lines.
 Do not include any real credentials, tokens, DSNs, or secret values.
 Write in Russian, concise and practical (no marketing).
 After writing DECISIONS.md, output a short summary: what decisions were captured (one line).
+
+----------------------------------------------------------------------------------------
+
+## 18.02.2026 19:45 мск
+Prompt 20 — error fix
+Fix the following issues in the RepairRequests application (FastAPI, React, PostgreSQL, Docker):
+When logging in as any user, the app returns a “not found” error. Login must work correctly.
+Remove role selection on the login screen. After login, open the workspace for the authenticated user immediately: a master should be redirected to the master dashboard, and a dispatcher should be redirected to the dispatcher dashboard, without any additional selection.
+In the master and dispatcher dashboards, display the name of the logged-in user (for example, “Master — master1”, “Dispatcher — dispatcher1”).
+In the dispatcher dashboard, place the “Refresh” button and the status filter on the same line.
+When assigning a request, show the master by name instead of by id. Display the master’s name in both the dropdown list and the “Master” column.
+When assigning a master to a request, a 500 error occurs due to MissingGreenlet (lazy loading of the master relationship in an async context). Explicitly load the master relationship before response validation.
+Requests assigned to a master must be visible in the master dashboard. Check statuses and filtering by master_id.
+Use the in_progress status instead of in_work for requests that are in progress.
+

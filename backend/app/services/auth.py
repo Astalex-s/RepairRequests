@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.core.settings import settings
 from app.models import User
 from app.repositories import UsersRepository
-
-_password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class AuthService:
@@ -16,7 +14,13 @@ class AuthService:
         self._users_repo = users_repo
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return _password_context.verify(plain_password, hashed_password)
+        try:
+            return bcrypt.checkpw(
+                plain_password.encode("utf-8"),
+                hashed_password.encode("utf-8"),
+            )
+        except Exception:
+            return False
 
     def create_access_token(self, user: User) -> str:
         expire = datetime.now(timezone.utc) + timedelta(

@@ -34,6 +34,7 @@ async def take_request(
     repo = RequestsRepository(db)
     service = RequestsService(repo)
     req = await service.take_in_work(request_id, current_user.id)
+    await db.refresh(req, attribute_names=["master"])
     return RequestRead.model_validate(req)
 
 
@@ -47,4 +48,5 @@ async def mark_request_done(
     repo = RequestsRepository(db)
     service = RequestsService(repo)
     req = await service.mark_done(request_id)
+    await db.refresh(req, attribute_names=["master"])
     return RequestRead.model_validate(req)

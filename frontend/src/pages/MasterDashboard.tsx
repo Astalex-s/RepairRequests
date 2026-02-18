@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { api } from "../api/client";
 import type { RequestRead } from "../api/types";
 import { ClientError } from "../api/client";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 export function MasterDashboard() {
+  const { user } = useCurrentUser();
   const [requests, setRequests] = useState<RequestRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export function MasterDashboard() {
 
   return (
     <div className="stack stack--lg">
-      <h1>Мастер</h1>
+      <h1>Мастер{user?.username ? ` — ${user.username}` : ""}</h1>
       <div className="row">
         <button type="button" className="btn btn-ghost" onClick={fetchRequests}>
           Обновить
@@ -98,7 +100,7 @@ export function MasterDashboard() {
                           {acting === r.id ? "…" : "Взять в работу"}
                         </button>
                       )}
-                      {r.status === "in_work" && (
+                      {r.status === "in_progress" && (
                         <button
                           type="button"
                           className="btn btn-primary"

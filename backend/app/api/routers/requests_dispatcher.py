@@ -36,6 +36,7 @@ async def assign_request(
     repo = RequestsRepository(db)
     service = RequestsService(repo)
     req = await service.assign_master(request_id, body.master_id)
+    await db.refresh(req, attribute_names=["master"])
     return RequestRead.model_validate(req)
 
 
@@ -49,4 +50,5 @@ async def cancel_request(
     repo = RequestsRepository(db)
     service = RequestsService(repo)
     req = await service.cancel(request_id)
+    await db.refresh(req, attribute_names=["master"])
     return RequestRead.model_validate(req)

@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
-import type { RequestRead } from "../api/types";
+import type { RequestRead, MasterOption } from "../api/types";
 import { ClientError } from "../api/client";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
-const STATUS_OPTIONS = ["", "new", "assigned", "in_work", "done", "cancelled"];
+const STATUS_OPTIONS = ["", "new", "assigned", "in_progress", "done", "cancelled"];
 
 export function DispatcherDashboard() {
+  const { user } = useCurrentUser();
+  const [masters, setMasters] = useState<MasterOption[]>([]);
   const [requests, setRequests] = useState<RequestRead[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
@@ -32,13 +35,22 @@ export function DispatcherDashboard() {
     fetchRequests();
   }, [statusFilter]);
 
+  useEffect(() => {
+    api
+      .get<MasterOption[]>("/users/masters")
+      .then(setMasters)
+      .catch(() => setMasters([]));
+  }, []);
+
   const handleAssign = async (id: number) => {
     const masterId = assignForm[id];
-    if (!masterId || !/^\d+$/.test(masterId)) return;
+    if (!masterId) return;
+    const idNum = parseInt(masterId, 10);
+    if (isNaN(idNum)) return;
     setAssigning(id);
     setError(null);
     try {
-      await api.patch(`/requests/${id}/assign`, { masterId: parseInt(masterId, 10) });
+      await api.patch(`/requests/${id}/assign`, { masterId: idNum });
       setAssignForm((f) => ({ ...f, [id]: "" }));
       await fetchRequests();
     } catch (err) {
@@ -63,24 +75,22 @@ export function DispatcherDashboard() {
 
   return (
     <div className="stack stack--lg">
-      <h1>Диспетчер</h1>
+      <h1>Диспетчер{user?.username ? ` — ${user.username}` : ""}</h1>
       <div className="row">
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="statusFilter" className="label">
-            Статус
-          </label>
-          <select
-            id="statusFilter"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s || "_"} value={s}>
-                {s || "все"}
-              </option>
-            ))}
-          </select>
-        </div>
+        <label htmlFor="statusFilter" className="label" style={{ marginBottom: 0 }}>
+          Статус
+        </label>
+        <select
+          id="statusFilter"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s || "_"} value={s}>
+              {s || "все"}
+            </option>
+          ))}
+        </select>
         <button type="button" className="btn btn-ghost" onClick={fetchRequests}>
           Обновить
         </button>
@@ -112,20 +122,25 @@ export function DispatcherDashboard() {
                   <td>
                     <span className="badge">{r.status}</span>
                   </td>
-                  <td>{r.assignedTo ?? "—"}</td>
+                  <td>{r.assignedToUsername ?? r.assignedTo ?? "—"}</td>
                   <td>
                     <div className="row">
                       {r.status === "new" && (
                         <>
-                          <input
-                            type="number"
-                            placeholder="ID мастера"
+                          <select
                             value={assignForm[r.id] ?? ""}
                             onChange={(e) =>
                               setAssignForm((f) => ({ ...f, [r.id]: e.target.value }))
                             }
-                            style={{ width: "100px" }}
-                          />
+                            style={{ minWidth: "120px" }}
+                          >
+                            <option value="">Выберите мастера</option>
+                            {masters.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.username}
+                              </option>
+                            ))}
+                          </select>
                           <button
                             type="button"
                             className="btn btn-primary"
@@ -136,7 +151,7 @@ export function DispatcherDashboard() {
                           </button>
                         </>
                       )}
-                      {(r.status === "new" || r.status === "assigned" || r.status === "in_work") && (
+                      {(r.status === "new" || r.status === "assigned" || r.status === "in_progress") && (
                         <button
                           type="button"
                           className="btn btn-ghost"

@@ -15,8 +15,14 @@ export interface RequestRead {
   address: string | null;
   status: string;
   assignedTo: number | null;
+  assignedToUsername: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MasterOption {
+  id: number;
+  username: string;
 }
 
 export interface TokenResponse {

@@ -11,6 +11,6 @@ COPY app ./app
 RUN pip install --no-cache-dir .
 
 COPY . .
-RUN chmod +x entrypoint.sh
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
