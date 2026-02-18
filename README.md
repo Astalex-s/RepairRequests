@@ -37,15 +37,24 @@ docker-compose.yml, .env.example (root infra)
 
 ## Запуск
 
-### Infra (postgres + pgAdmin)
+### Полный стек (dev)
 
 ```bash
 cp .env.example .env
 # Заполните .env реальными значениями (не коммитить!)
-docker compose up -d
+docker compose up --build
 ```
 
-Сервисы: postgres (порт 5432), pgadmin (порт 5050), backend (порт 8000). Volumes и healthchecks включены.
+**URLs:**
+
+| Сервис   | URL                      |
+|----------|--------------------------|
+| Frontend | http://localhost:5173    |
+| Backend  | http://localhost:8000    |
+| API docs | http://localhost:8000/docs|
+| pgAdmin  | http://localhost:5050     |
+
+Сервисы: postgres (5432), pgadmin (5050), backend (8000), frontend (5173). Volumes и healthchecks включены.
 
 **Миграции и сиды выполняются автоматически при старте backend** (alembic upgrade head, затем python -m app.seed).
 
@@ -54,14 +63,6 @@ docker compose up -d
 1. Откройте http://localhost:5050, войдите с учётом из `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD`.
 2. Добавьте сервер: правый клик по "Servers" → "Register" → "Server...".
 3. Вкладка "Connection": **Host** — `postgres`, **Port** — `5432`, **Username** — `POSTGRES_USER`, **Password** — `POSTGRES_PASSWORD` из `.env`.
-
-### Dev (полный стек, позже)
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-Сервисы: app, postgres, pgadmin. Volumes и healthchecks включены.
 
 ### Prod
 
@@ -96,6 +97,44 @@ docker compose -f docker-compose.prod.yml up -d
 ## Проверка гонки (take in work)
 
 Одновременный запрос на взятие одной заявки двумя мастерами: один получает 200, второй — 409 («Заявка уже взята в работу»). Реализация атомарная.
+
+**Проверка вручную (2 терминала):**
+
+1. Создайте заявку и получите токены:
+   ```bash
+   # Заявка
+   curl -s -X POST http://localhost:8000/requests -H "Content-Type: application/json" \
+     -d '{"clientName":"Test","clientPhone":"+7","problemText":"Test"}'
+
+   # Токены master1 и master2
+   TOKEN1=$(curl -s -X POST http://localhost:8000/auth/token -d "username=master1&password=dev123" | jq -r .accessToken)
+   TOKEN2=$(curl -s -X POST http://localhost:8000/auth/token -d "username=master2&password=dev123" | jq -r .accessToken)
+   ```
+
+2. В двух терминалах одновременно выполните (подставьте ID заявки из шага 1):
+   ```bash
+   # Терминал 1
+   curl -s -o /dev/null -w "%{http_code}" -X PATCH http://localhost:8000/requests/1/take -H "Authorization: Bearer $TOKEN1"
+
+   # Терминал 2
+   curl -s -o /dev/null -w "%{http_code}" -X PATCH http://localhost:8000/requests/1/take -H "Authorization: Bearer $TOKEN2"
+   ```
+
+   Ожидаемый результат: один ответ **200**, другой **409**.
+
+## Quality gates (перед коммитом)
+
+```bash
+./scripts/check.sh
+```
+
+Запускает: black, ruff, pytest (backend), npm run build (frontend). Требует: `pip install black ruff pytest` в venv backend.
+
+```bash
+./scripts/commit_checked.sh "сообщение коммита"
+```
+
+Выполняет check.sh и коммит с коротким RU-сообщением. На Windows: Git Bash или WSL.
 
 ## Документация
 

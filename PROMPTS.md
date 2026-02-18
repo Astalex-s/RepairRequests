@@ -404,6 +404,9 @@ DispatcherDashboard: list/filter/assign/cancel.
 MasterDashboard: list/take/done.
 UI must match laconic theme (reuse same input/button styles).
 
+----------------------------------------------------------------------------------------
+
+## 18.02.2026 18:36 мск
 Prompt 18 — frontend Docker + compose wiring + README smoke tests + scripts
 Make changes only in these files:
 frontend/Dockerfile (create)
@@ -422,6 +425,9 @@ race check with 2 terminals (curl) expecting 200 + 409
 Add scripts/check.sh to run black, ruff, pytest (backend) and frontend lint/typecheck if configured.
 Add scripts/commit_checked.sh that runs check.sh and then commits with a short RU message prompt.
 
+----------------------------------------------------------------------------------------
+
+## 18.02.2026 18:45 мск
 Prompt 19 — DECISIONS.md (6 решений)
 Make changes only in these files:
 DECISIONS.md (create)
@@ -439,9 +445,8 @@ Why we use async SQLAlchemy + Postgres (and keep DB logic in repositories).
 Why Alembic migrations run automatically in backend container entrypoint (and why seeds are still a separate script/step, even if invoked after migrations).
 Why “take in work” uses a single conditional UPDATE and returns 409 on race.
 Why JWT Bearer auth for internal roles (dispatcher/master) and public endpoint only for creating requests.
-Why frontend UI is implemented with plain CSS (no heavy UI library) and is intentionally laconic, inspired by 
-https://download.kodacode.ru/
- (whitespace, clean typography, minimal components).
+Why frontend UI is implemented with plain CSS (no heavy UI library) and is intentionally laconic
+(whitespace, clean typography, minimal components).
 Content constraints:
 Keep the whole file under ~200 lines.
 Do not include any real credentials, tokens, DSNs, or secret values.
