@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api.routers import auth
+from app.api.routers import auth, requests_dispatcher, requests_public
 from app.core.errors import (
     http_exception_handler,
     validation_exception_handler,
@@ -13,6 +13,8 @@ from app.core.settings import settings
 app = FastAPI(title="RepairRequests")
 
 app.include_router(auth.router)
+app.include_router(requests_public.router)
+app.include_router(requests_dispatcher.router)
 
 app.add_middleware(
     CORSMiddleware,

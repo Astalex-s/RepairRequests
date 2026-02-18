@@ -250,7 +250,7 @@ Dependencies: get_current_user, require_dispatcher, require_master.
 
 ----------------------------------------------------------------------------------------
 
-19/02/2026 18:07 мск
+19/02/2026 18:10 мск
 Prompt 12 — backend: public router (создание заявки без JWT)
 Make changes only in these files:
 backend/app/api/routers/requests_public.py (create)
@@ -260,6 +260,9 @@ Follow PROJECT RULES (Cursor).
 Tasks:
 Implement POST /requests публично (no JWT), validate required fields via schemas, return RequestRead.
 
+----------------------------------------------------------------------------------------
+
+19/02/2026 18:11 мск
 Prompt 13 — backend: dispatcher router (JWT + dispatcher)
 Make changes only in these files:
 backend/app/api/routers/requests_dispatcher.py (create)
@@ -272,6 +275,9 @@ PATCH /requests/{id}/assign
 PATCH /requests/{id}/cancel
 Use require_dispatcher dependency.
 
+----------------------------------------------------------------------------------------
+
+19/02/2026 18:13 мск
 Prompt 14 — backend: master router (JWT + master) + гонка
 Make changes only in these files:
 backend/app/api/routers/requests_master.py (create)
