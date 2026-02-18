@@ -96,31 +96,42 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## Проверка гонки (take in work)
 
-Одновременный запрос на взятие одной заявки двумя мастерами: один получает 200, второй — 409 («Заявка уже взята в работу»). Реализация атомарная.
+Одновременный запрос на взятие одной заявки двумя мастерами: один получает 200, второй — 409 («Заявка уже взята в работу») или 400 (недопустимый переход). Реализация атомарная.
 
-**Проверка вручную (2 терминала):**
+### Скрипты race_test
 
-1. Создайте заявку и получите токены:
-   ```bash
-   # Заявка
-   curl -s -X POST http://localhost:8000/requests -H "Content-Type: application/json" \
-     -d '{"clientName":"Test","clientPhone":"+7","problemText":"Test"}'
+Автоматическая проверка: создаёт заявку, отправляет два параллельных PATCH-запроса от master1 и master2, проверяет, что один вернул 200, другой — 409 или 400.
 
-   # Токены master1 и master2
-   TOKEN1=$(curl -s -X POST http://localhost:8000/auth/token -d "username=master1&password=dev123" | jq -r .accessToken)
-   TOKEN2=$(curl -s -X POST http://localhost:8000/auth/token -d "username=master2&password=dev123" | jq -r .accessToken)
-   ```
+**Требования:** backend и frontend должны быть запущены (`docker compose up`), curl (bash) или PowerShell 5.1+ (Windows).
 
-2. В двух терминалах одновременно выполните (подставьте ID заявки из шага 1):
-   ```bash
-   # Терминал 1
-   curl -s -o /dev/null -w "%{http_code}" -X PATCH http://localhost:8000/requests/1/take -H "Authorization: Bearer $TOKEN1"
+#### Linux / macOS / Git Bash
 
-   # Терминал 2
-   curl -s -o /dev/null -w "%{http_code}" -X PATCH http://localhost:8000/requests/1/take -H "Authorization: Bearer $TOKEN2"
-   ```
+```bash
+chmod +x scripts/race_test.sh
+./scripts/race_test.sh
+```
 
-   Ожидаемый результат: один ответ **200**, другой **409**.
+#### Windows (PowerShell)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/race_test.ps1
+```
+
+По умолчанию используется `http://localhost:5173/api` (frontend proxy при `docker compose up`). Для прямого доступа к backend:
+
+```bash
+# Bash
+BASE_URL=http://localhost:8000 ./scripts/race_test.sh
+```
+
+```powershell
+# PowerShell
+$env:BASE_URL="http://localhost:8000"; .\scripts\race_test.ps1
+```
+
+Успех: `PASS: One 200, one 409/400`. Ошибка: `FAIL` и exit code 1.
+
+**Проверка вручную (2 терминала):** создайте заявку, получите токены master1/master2, в двух терминалах одновременно выполните `curl -X PATCH .../requests/{id}/take` с разными токенами. Ожидается один 200, другой 409 или 400.
 
 ## Quality gates (перед коммитом)
 
