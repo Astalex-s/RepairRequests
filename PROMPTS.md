@@ -291,6 +291,8 @@ PATCH /requests/{id}/take (calls service -> repository.take_in_work_atomic)
 PATCH /requests/{id}/done
 Ensure take returns 409 with message “Заявка уже взята в работу” when affected rows == 0.
 
+----------------------------------------------------------------------------------------
+
 Prompt 15 — seed script (отдельно от миграций, но автозапуск после)
 Make changes only in these files:
 backend/app/seed.py (create)
