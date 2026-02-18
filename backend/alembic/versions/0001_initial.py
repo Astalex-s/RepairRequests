@@ -1,6 +1,6 @@
-"""Add users and repair_requests tables
+"""Initial migration: users + repair_requests + indexes
 
-Revision ID: 001
+Revision ID: 0001
 Revises:
 Create Date: 2026-02-18
 
@@ -11,7 +11,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision: str = "001"
+revision: str = "0001"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

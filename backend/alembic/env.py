@@ -14,10 +14,14 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-database_url = os.getenv(
-    "DATABASE_URL",
-    config.get_main_option("sqlalchemy.url"),
-)
+# DATABASE_URL from env or settings (env takes precedence)
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    try:
+        from app.core.settings import settings
+        database_url = settings.DATABASE_URL
+    except Exception:
+        database_url = config.get_main_option("sqlalchemy.url")
 config.set_main_option("sqlalchemy.url", database_url)
 
 
