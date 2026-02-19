@@ -254,7 +254,7 @@ docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pyt
 
 ## GitHub Actions (CI/CD)
 
-Workflow `.github/workflows/workflow.yaml` запускается при push в ветку `master` и выполняет:
+Workflow `.github/workflows/workflow.yaml` запускается при push в ветку `main` и выполняет:
 
 1. **Build and Push** — сборка образов backend и frontend, публикация в GitHub Container Registry (ghcr.io)
 2. **Deploy** — подключение к серверу по SSH, обновление образов и перезапуск контейнеров
@@ -284,7 +284,7 @@ Workflow `.github/workflows/workflow.yaml` запускается при push в
 
 ### Запуск workflow
 
-1. Влить изменения в ветку `master` (или merge PR в `master`). Если основная ветка — `main`, измените `branches: [master]` на `branches: [main]` в workflow.
+1. Влить изменения в ветку `main` (или merge PR в `main`). 
 2. В Actions → Build and Deploy — проверить статус.
 3. При успехе: workflow копирует `docker-compose.prod.yml` на сервер, выполняет `docker compose pull` и `docker compose up -d`.
 
