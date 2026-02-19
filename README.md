@@ -1,38 +1,98 @@
 # RepairRequests
 
-Система управления заявками на ремонт. FastAPI + React + PostgreSQL + Docker.
+**Система управления заявками на ремонт** — веб-приложение для приёма заявок от клиентов, распределения работ между мастерами и отслеживания статусов выполнения. Подходит для сервисных центров, аварийных служб и компаний, оказывающих услуги по вызову.
+
+## Назначение программы
+
+RepairRequests автоматизирует типичный цикл работы с заявками на ремонт:
+
+1. **Клиент** оставляет заявку через публичную форму (без регистрации): указывает имя, телефон, адрес и описание проблемы.
+2. **Диспетчер** видит все заявки, фильтрует по статусу, назначает мастера и при необходимости отменяет заявку.
+3. **Мастер** получает список назначенных на него заявок, берёт их в работу и отмечает выполнение.
+
+Система фиксирует все изменения в **истории заявки (audit log)** — кто и когда создал, назначил, взял в работу или завершил заявку. При одновременной попытке двух мастеров взять одну заявку срабатывает защита от гонки: один запрос успешен, второй получает понятный отказ.
+
+**Технологический стек:** FastAPI (backend), React + TypeScript (frontend), PostgreSQL, Docker Compose. REST API с JWT-аутентификацией, Pydantic-валидацией и единым форматом ошибок.
+
+---
 
 ## Функционал
 
-- **Создание заявок** — публичная форма (клиент, телефон, адрес, описание)
-- **Панель диспетчера** — список заявок, фильтр по статусу, назначение мастера, отмена
-- **Панель мастера** — список назначенных заявок, «Взять в работу», «Выполнено»
-- **История заявок (audit log)** — раскрываемая строка с событиями (создание, назначение, взятие, выполнение, отмена)
-- **Детальные ошибки в UI** — валидация по полям, сообщения об ошибках в едином формате
-- **Взятие в работу** — атомарная операция, защита от гонки (409 при конфликте)
-- **JWT-аутентификация** — роли dispatcher и master
+### Для клиентов (без входа)
+
+- **Создание заявки** — форма с полями: имя клиента, телефон, адрес (необязательно), описание проблемы. После отправки заявка получает статус `new`.
+
+### Для диспетчера
+
+- **Список заявок** — таблица с ID, клиентом, телефоном, описанием, статусом, назначенным мастером.
+- **Фильтр по статусу** — `new`, `assigned`, `in_progress`, `done`, `cancelled`.
+- **Назначение мастера** — выбор из списка мастеров, перевод заявки в статус `assigned`.
+- **Отмена заявки** — перевод в статус `cancelled`.
+- **История заявки** — кнопка «▼ История» раскрывает строку с событиями: создание, назначение, взятие в работу, выполнение, отмена (с указанием пользователя и перехода статусов).
+
+### Для мастера
+
+- **Список назначенных заявок** — только заявки, назначенные на текущего мастера.
+- **Взять в работу** — перевод `assigned` → `in_progress` (атомарно, защита от гонки).
+- **Выполнено** — перевод `in_progress` → `done`.
+- **История заявки** — та же раскрываемая строка с событиями.
+
+### Общее
+
+- **JWT-аутентификация** — логин по имени и паролю, автоматический редирект на панель по роли.
+- **Детальные ошибки в UI** — валидация по полям (например, «Телефон: обязательное поле»), единый формат сообщений об ошибках.
+- **Audit log** — события хранятся в БД, отображаются в панелях диспетчера и мастера.
+
+---
 
 ## Архитектура
 
-Монорепозиторий FastAPI + React + Docker. Структура:
+Монорепозиторий. Разделение слоёв: роуты не содержат SQL, работа с БД — через repositories, бизнес-логика — в services.
+
+### Backend (FastAPI)
 
 ```
-backend/app/main.py
-backend/app/api/routers/
-backend/app/services/
-backend/app/repositories/
-backend/app/models/
-backend/app/schemas/
-backend/app/core/
-backend/alembic/
-frontend/src/api/
-frontend/src/pages/
-frontend/src/components/
-frontend/src/styles/
-docker-compose.yml, .env.example
+backend/
+├── app/
+│   ├── main.py              # Создание приложения, CORS, обработчики ошибок
+│   ├── api/routers/         # HTTP-эндпоинты
+│   │   ├── auth.py          # POST /auth/token, GET /auth/me
+│   │   ├── requests_public.py   # POST /requests (создание, публично)
+│   │   ├── requests_dispatcher.py # GET/PATCH /requests (список, assign, cancel, history)
+│   │   ├── requests_master.py    # GET /master/requests, PATCH take/done, history
+│   │   └── users.py         # GET /users/masters
+│   ├── services/            # Бизнес-логика, проверки переходов статусов
+│   ├── repositories/        # SQL, работа с БД (requests, users, audit)
+│   ├── models/              # SQLAlchemy (User, RepairRequest, RequestAuditEvent)
+│   ├── schemas/             # Pydantic (RequestCreate, RequestRead, RequestAssign и др.)
+│   ├── core/                # settings, errors, security
+│   └── db/                  # engine, session, base
+├── alembic/                 # Миграции БД
+├── tests/                   # pytest (health, create, auth)
+└── seed.py                  # Сиды: пользователи и тестовые заявки
 ```
 
-**Правила:** роуты без SQL; БД через repositories; бизнес-логика в services. Frontend — в `frontend/src/`, backend — в `backend/app/`.
+### Frontend (React + Vite)
+
+```
+frontend/
+├── src/
+│   ├── api/                 # client.ts (fetch + Bearer), types.ts
+│   ├── pages/               # PublicCreateRequest, Login, DispatcherDashboard, MasterDashboard
+│   ├── components/          # ErrorBanner (parseErrorMessage)
+│   ├── hooks/               # useCurrentUser
+│   └── styles/              # theme.css (design tokens)
+└── vite.config.ts           # Прокси /api → backend:8000
+```
+
+### Инфраструктура
+
+- `docker-compose.yml` — postgres, pgadmin, backend, frontend
+- `.env.example` — шаблон переменных окружения
+- `scripts/race_test.sh`, `scripts/race_test.ps1` — проверка гонки
+- `scripts/check.sh`, `scripts/commit_checked.sh` — quality gates
+
+---
 
 ## Запуск
 
@@ -53,18 +113,17 @@ docker compose up --build
 | API docs | http://localhost:8000/docs |
 | pgAdmin  | http://localhost:5050     |
 
-Миграции и сиды выполняются автоматически при старте backend (entrypoint).
+Миграции (`alembic upgrade head`) и сиды (`python -m app.seed`) выполняются автоматически при старте backend (см. `backend/entrypoint.sh`).
 
 ### Запуск без Docker
 
 ```bash
-# 1. PostgreSQL
-# Создайте БД и пользователя, настройте DATABASE_URL в .env
+# 1. PostgreSQL — создайте БД и пользователя, настройте DATABASE_URL в .env
 
 # 2. Backend
 cd backend
 python -m venv .venv
-.venv\Scripts\activate  # Windows
+.venv\Scripts\activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 alembic upgrade head
 python -m app.seed
@@ -76,18 +135,26 @@ npm install
 npm run dev
 ```
 
-Frontend: http://localhost:5173 (проксирует /api на backend:8000).
+Frontend: http://localhost:5173 (проксирует `/api` на backend:8000).
+
+---
 
 ## Переменные окружения
 
 См. `.env.example`. Ключевые:
 
-- `DATABASE_URL` — DSN PostgreSQL
-- `JWT_SECRET_KEY` — секрет для JWT
-- `JWT_ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES` — параметры токена
-- `CORS_ORIGINS` — разрешённые origins для CORS
+| Переменная | Описание |
+|------------|----------|
+| `DATABASE_URL` | DSN PostgreSQL |
+| `JWT_SECRET_KEY` | Секрет для подписи JWT |
+| `JWT_ALGORITHM` | Алгоритм (HS256) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Время жизни токена |
+| `CORS_ORIGINS` | Разрешённые origins (через запятую) |
+| `POSTGRES_*`, `PGADMIN_*` | Для Docker-сервисов |
 
-Секреты только через env; в репо — только `.env.example` без реальных значений.
+Секреты только через env; в репозитории — только `.env.example` без реальных значений.
+
+---
 
 ## Тестовые пользователи (только dev)
 
@@ -107,13 +174,25 @@ Frontend: http://localhost:5173 (проксирует /api на backend:8000).
 2. Войдите как **master1** → панель мастера: 1 заявка (Петрова), «Взять в работу», «История».
 3. Войдите как **master2** → панель мастера: 1 заявка (Сидоров), «Выполнено», «История».
 
+---
+
 ## История заявок (audit log)
 
-В панелях диспетчера и мастера — колонка «История». Кнопка «▼ История» раскрывает строку с событиями: создание, назначение, взятие в работу, выполнение, отмена. Указывается пользователь и переход статусов.
+В панелях диспетчера и мастера — колонка «История». Кнопка «▼ История» раскрывает строку с событиями:
+
+- **Создана** — заявка создана через публичную форму
+- **Назначена** — диспетчер назначил мастера (указывается пользователь)
+- **Взята в работу** — мастер начал выполнение
+- **Выполнена** — мастер отметил завершение
+- **Отменена** — диспетчер отменил заявку
+
+Для каждого события отображаются: действие, пользователь, переход статусов (old → new), дата и время.
+
+---
 
 ## Проверка гонки (take in work)
 
-Одновременный запрос на взятие одной заявки двумя мастерами: один получает 200, второй — 409 («Заявка уже взята в работу») или 400.
+При одновременной попытке двух мастеров взять одну заявку: один запрос возвращает 200, второй — 409 («Заявка уже взята в работу») или 400. Реализация атомарная (условный UPDATE в PostgreSQL).
 
 ### Скрипты race_test
 
@@ -134,11 +213,14 @@ powershell -ExecutionPolicy Bypass -File scripts/race_test.ps1
 
 Успех: `PASS: One 200, one 409/400`. Ошибка: `FAIL`, exit code 1.
 
+---
+
 ## Backend tests
 
 ```bash
 cd backend
 pip install -e ".[dev]"
+# Windows PowerShell:
 $env:DATABASE_URL="sqlite+aiosqlite:///:memory:"; $env:JWT_SECRET_KEY="test"; python -m pytest tests/ -v
 ```
 
@@ -149,6 +231,8 @@ docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pyt
 ```
 
 Тесты: health, создание заявки, auth (валидный/невалидный токен).
+
+---
 
 ## Quality gates
 
@@ -164,8 +248,10 @@ docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pyt
 
 Выполняет check.sh и коммит с коротким RU-сообщением. На Windows: Git Bash или WSL.
 
+---
+
 ## Документация
 
-- `DECISIONS.md` — ключевые решения
+- `DECISIONS.md` — ключевые архитектурные решения
 - `PROMPTS.md` — история промптов для AI
 - `.cursor/rules.md` — PROJECT RULES для Cursor
