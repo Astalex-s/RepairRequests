@@ -8,7 +8,8 @@ RUN npm ci
 COPY . .
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
-RUN npm run build
+# Use explicit paths to avoid exit 127 (command not found) in CI
+RUN ./node_modules/.bin/tsc --noEmit && ./node_modules/.bin/vite build
 
 # Production stage
 FROM nginx:alpine
