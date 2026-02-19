@@ -87,8 +87,10 @@ frontend/
 
 ### Инфраструктура
 
-- `docker-compose.yml` — postgres, pgadmin, backend, frontend
+- `docker-compose.yml` — dev: postgres, pgadmin, backend, frontend
+- `docker-compose.prod.yml` — prod: образы из GHCR, без pgadmin (для деплоя)
 - `.env.example` — шаблон переменных окружения
+- `.github/workflows/workflow.yaml` — CI/CD: сборка → GHCR → деплой по SSH
 - `scripts/race_test.sh`, `scripts/race_test.ps1` — проверка гонки
 - `scripts/check.sh`, `scripts/commit_checked.sh` — quality gates
 
@@ -250,8 +252,52 @@ docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pyt
 
 ---
 
+## GitHub Actions (CI/CD)
+
+Workflow `.github/workflows/workflow.yaml` запускается при push в ветку `master` и выполняет:
+
+1. **Build and Push** — сборка образов backend и frontend, публикация в GitHub Container Registry (ghcr.io)
+2. **Deploy** — подключение к серверу по SSH, обновление образов и перезапуск контейнеров
+
+### Настройка GitHub Secrets
+
+В репозитории: **Settings → Secrets and variables → Actions → New repository secret**.
+
+| Secret | Описание |
+|--------|----------|
+| `SSH_HOST` | Hostname или IP сервера |
+| `SSH_PORT` | Порт SSH (например, 22) |
+| `SSH_USERNAME` | Имя пользователя для SSH |
+| `SSH_PRIVATE_KEY` | Приватный SSH-ключ (полностью, включая `-----BEGIN/END-----`) |
+| `DEPLOY_PATH` | Путь на сервере (например, `/opt/repairrequests`) |
+| `GHCR_TOKEN` | GitHub PAT с `read:packages` для `docker login` на сервере |
+| `GHCR_USERNAME` | GitHub username для `docker login` |
+
+**Создание GHCR_TOKEN:** GitHub → Settings → Developer settings → Personal access tokens → Generate new token (classic). Scope: `read:packages`.
+
+### Подготовка сервера
+
+1. Установить Docker и Docker Compose.
+2. Создать каталог `DEPLOY_PATH` (например, `/opt/repairrequests`).
+3. Создать `.env` в `DEPLOY_PATH` с переменными окружения (см. `.env.example`): `POSTGRES_*`, `DATABASE_URL`, `JWT_SECRET_KEY`, `CORS_ORIGINS` (укажите production-домен) и т.д.
+4. Убедиться, что SSH-ключ добавлен в `~/.ssh/authorized_keys` пользователя `SSH_USERNAME`.
+
+### Запуск workflow
+
+1. Влить изменения в ветку `master` (или merge PR в `master`). Если основная ветка — `main`, измените `branches: [master]` на `branches: [main]` в workflow.
+2. В Actions → Build and Deploy — проверить статус.
+3. При успехе: workflow копирует `docker-compose.prod.yml` на сервер, выполняет `docker compose pull` и `docker compose up -d`.
+
+### Образы в GHCR
+
+- `ghcr.io/<owner>/repairrequests-backend:latest`, `:sha`
+- `ghcr.io/<owner>/repairrequests-frontend:latest`, `:sha`
+
+---
+
 ## Документация
 
 - `DECISIONS.md` — ключевые архитектурные решения
 - `PROMPTS.md` — история промптов для AI
 - `.cursor/rules.md` — PROJECT RULES для Cursor
+- `.github/workflows/workflow.yaml` — CI/CD workflow (см. раздел GitHub Actions выше)
