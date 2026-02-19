@@ -1,5 +1,5 @@
-# Build stage
-FROM node:20-alpine AS build
+# Build stage (slim: Debian-based, more reliable than alpine in CI for npm run)
+FROM node:20-slim AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
