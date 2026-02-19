@@ -109,7 +109,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "docker-compose.prod.generated.yml"
-          target: ${{ secrets.DEPLOY_PATH }}/docker-compose.prod.yml
+          target: ${{ secrets.DEPLOY_PATH }}
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
@@ -122,6 +122,6 @@ jobs:
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml down --remove-orphans || true
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.generated.yml pull
+            docker compose -f docker-compose.prod.generated.yml down --remove-orphans || true
+            docker compose -f docker-compose.prod.generated.yml up -d
