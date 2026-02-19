@@ -1,24 +1,26 @@
 # RepairRequests
 
-Система управления заявками на ремонт (FastAPI).
+Система управления заявками на ремонт. FastAPI + React + PostgreSQL + Docker.
 
 ## Функционал
 
-- Создание и просмотр заявок
-- Взятие заявки в работу (атомарная операция, защита от гонки)
-- JWT-аутентификация, роли пользователей
-- REST API с Pydantic-валидацией
+- **Создание заявок** — публичная форма (клиент, телефон, адрес, описание)
+- **Панель диспетчера** — список заявок, фильтр по статусу, назначение мастера, отмена
+- **Панель мастера** — список назначенных заявок, «Взять в работу», «Выполнено»
+- **История заявок (audit log)** — раскрываемая строка с событиями (создание, назначение, взятие, выполнение, отмена)
+- **Детальные ошибки в UI** — валидация по полям, сообщения об ошибках в едином формате
+- **Взятие в работу** — атомарная операция, защита от гонки (409 при конфликте)
+- **JWT-аутентификация** — роли dispatcher и master
 
-## Architecture
+## Архитектура
 
-Монорепозиторий FastAPI + React + Docker. Структура папок:
+Монорепозиторий FastAPI + React + Docker. Структура:
 
 ```
 backend/app/main.py
 backend/app/api/routers/
 backend/app/services/
 backend/app/repositories/
-backend/app/db/
 backend/app/models/
 backend/app/schemas/
 backend/app/core/
@@ -27,17 +29,14 @@ frontend/src/api/
 frontend/src/pages/
 frontend/src/components/
 frontend/src/styles/
-docker-compose.yml, .env.example (root infra)
+docker-compose.yml, .env.example
 ```
 
-**Правила:**
-
-- Роуты не содержат SQL; вся работа с БД через repositories; бизнес-логика в services.
-- Всё, что использует frontend, живёт в `frontend/src/`; backend — в `backend/app/`.
+**Правила:** роуты без SQL; БД через repositories; бизнес-логика в services. Frontend — в `frontend/src/`, backend — в `backend/app/`.
 
 ## Запуск
 
-### Полный стек (dev)
+### Docker Compose (рекомендуется)
 
 ```bash
 cp .env.example .env
@@ -47,40 +46,48 @@ docker compose up --build
 
 **URLs:**
 
-| Сервис   | URL                      |
-|----------|--------------------------|
-| Frontend | http://localhost:5173    |
-| Backend  | http://localhost:8000    |
-| API docs | http://localhost:8000/docs|
+| Сервис   | URL                       |
+|----------|---------------------------|
+| Frontend | http://localhost:5173     |
+| Backend  | http://localhost:8000     |
+| API docs | http://localhost:8000/docs |
 | pgAdmin  | http://localhost:5050     |
 
-Сервисы: postgres (5432), pgadmin (5050), backend (8000), frontend (5173). Volumes и healthchecks включены.
+Миграции и сиды выполняются автоматически при старте backend (entrypoint).
 
-**Миграции и сиды выполняются автоматически при первом запуске backend** (alembic upgrade head, затем python -m app.seed). Пользователи и тестовые заявки создаются сразу.
-
-#### Подключение через pgAdmin
-
-1. Откройте http://localhost:5050, войдите с учётом из `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD`.
-2. Добавьте сервер: правый клик по "Servers" → "Register" → "Server...".
-3. Вкладка "Connection": **Host** — `postgres`, **Port** — `5432`, **Username** — `POSTGRES_USER`, **Password** — `POSTGRES_PASSWORD` из `.env`.
-
-### Prod
+### Запуск без Docker
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+# 1. PostgreSQL
+# Создайте БД и пользователя, настройте DATABASE_URL в .env
+
+# 2. Backend
+cd backend
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+pip install -e ".[dev]"
+alembic upgrade head
+python -m app.seed
+uvicorn app.main:app --reload --port 8000
+
+# 3. Frontend (в другой консоли)
+cd frontend
+npm install
+npm run dev
 ```
 
-Сервисы: app, nginx, ssl (Let's Encrypt). pgadmin не используется.
+Frontend: http://localhost:5173 (проксирует /api на backend:8000).
 
 ## Переменные окружения
 
-См. `.env.example`. Ключевые переменные:
+См. `.env.example`. Ключевые:
 
 - `DATABASE_URL` — DSN PostgreSQL
 - `JWT_SECRET_KEY` — секрет для JWT
-- `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES` — параметры токена
+- `JWT_ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES` — параметры токена
+- `CORS_ORIGINS` — разрешённые origins для CORS
 
-Секреты только через env; в репозитории — только `.env.example` без реальных значений.
+Секреты только через env; в репо — только `.env.example` без реальных значений.
 
 ## Тестовые пользователи (только dev)
 
@@ -92,84 +99,50 @@ docker compose -f docker-compose.prod.yml up -d
 | master    | master1    | dev123 |
 | master    | master2    | dev123 |
 
-Сиды создают пользователей и тестовые заявки. В БД хранится только `password_hash`.
+Сиды создают пользователей и 3 тестовые заявки. В БД хранится только `password_hash`.
 
-### Сиды (для проверяющих)
+**Проверка после запуска:**
 
-Скрипт `backend/app/seed.py` выполняется **автоматически при первом запуске** backend (в entrypoint). Он создаёт:
+1. Войдите как **dispatcher1** → панель диспетчера: 3 заявки, фильтр, назначение, отмена, кнопка «История».
+2. Войдите как **master1** → панель мастера: 1 заявка (Петрова), «Взять в работу», «История».
+3. Войдите как **master2** → панель мастера: 1 заявка (Сидоров), «Выполнено», «История».
 
-- **Пользователей:** dispatcher1, master1, master2 (пароль `dev123`)
-- **Тестовые заявки:** 3 заявки с разными статусами для проверки панелей
+## История заявок (audit log)
 
-| Заявка | Статус | Назначена |
-|--------|--------|-----------|
-| Иванов Иван — розетка в кухне | new | — |
-| Петрова Мария — кран в ванной | assigned | master1 |
-| Сидоров Пётр — свет в коридоре | in_progress | master2 |
-
-**При первом запуске** (`docker compose up`): сиды создаются автоматически — сразу после миграций.
-
-**Если тестовые данные были удалены:** восстановить их можно вручную:
-
-```bash
-docker compose exec backend python -m app.seed
-```
-
-Сиды идемпотентны: тестовые заявки добавляются только если их ещё нет в БД (проверка по телефонам).
-
-**Проверка после первого запуска:**
-
-1. Войдите как **dispatcher1** → панель диспетчера: должны быть 3 заявки.
-2. Войдите как **master1** → панель мастера: 1 заявка (Петрова) в статусе «assigned», кнопка «Взять в работу».
-3. Войдите как **master2** → панель мастера: 1 заявка (Сидоров) в статусе «in_progress», кнопка «Выполнено».
+В панелях диспетчера и мастера — колонка «История». Кнопка «▼ История» раскрывает строку с событиями: создание, назначение, взятие в работу, выполнение, отмена. Указывается пользователь и переход статусов.
 
 ## Проверка гонки (take in work)
 
-Одновременный запрос на взятие одной заявки двумя мастерами: один получает 200, второй — 409 («Заявка уже взята в работу») или 400 (недопустимый переход). Реализация атомарная.
+Одновременный запрос на взятие одной заявки двумя мастерами: один получает 200, второй — 409 («Заявка уже взята в работу») или 400.
 
 ### Скрипты race_test
 
-Автоматическая проверка: создаёт заявку, отправляет два параллельных PATCH-запроса от master1 и master2, проверяет, что один вернул 200, другой — 409 или 400.
-
-**Требования:** backend и frontend должны быть запущены (`docker compose up`), curl (bash) или PowerShell 5.1+ (Windows).
-
-#### Linux / macOS / Git Bash
+**Требования:** backend и frontend запущены (`docker compose up`), curl (bash) или PowerShell (Windows).
 
 ```bash
+# Linux / macOS / Git Bash
 chmod +x scripts/race_test.sh
 ./scripts/race_test.sh
 ```
 
-#### Windows (PowerShell)
-
 ```powershell
+# Windows PowerShell
 powershell -ExecutionPolicy Bypass -File scripts/race_test.ps1
 ```
 
-По умолчанию используется `http://localhost:5173/api` (frontend proxy при `docker compose up`). Для прямого доступа к backend:
+По умолчанию: `http://localhost:5173/api`. Для прямого backend: `BASE_URL=http://localhost:8000 ./scripts/race_test.sh`.
 
-```bash
-# Bash
-BASE_URL=http://localhost:8000 ./scripts/race_test.sh
-```
-
-```powershell
-# PowerShell
-$env:BASE_URL="http://localhost:8000"; .\scripts\race_test.ps1
-```
-
-Успех: `PASS: One 200, one 409/400`. Ошибка: `FAIL` и exit code 1.
-
-**Проверка вручную (2 терминала):** создайте заявку, получите токены master1/master2, в двух терминалах одновременно выполните `curl -X PATCH .../requests/{id}/take` с разными токенами. Ожидается один 200, другой 409 или 400.
+Успех: `PASS: One 200, one 409/400`. Ошибка: `FAIL`, exit code 1.
 
 ## Backend tests
 
 ```bash
-# В backend venv (Python 3.12+)
-cd backend && pip install -e ".[dev]" && python -m pytest -v
+cd backend
+pip install -e ".[dev]"
+$env:DATABASE_URL="sqlite+aiosqlite:///:memory:"; $env:JWT_SECRET_KEY="test"; python -m pytest tests/ -v
 ```
 
-Через Docker (без PostgreSQL):
+Через Docker:
 
 ```bash
 docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pytest pytest-asyncio httpx aiosqlite -q && DATABASE_URL=sqlite+aiosqlite:///:memory: JWT_SECRET_KEY=test python -m pytest tests/ -v"
@@ -177,13 +150,13 @@ docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pyt
 
 Тесты: health, создание заявки, auth (валидный/невалидный токен).
 
-## Quality gates (перед коммитом)
+## Quality gates
 
 ```bash
 ./scripts/check.sh
 ```
 
-Запускает: black, ruff, pytest (backend), npm run build (frontend). Требует: `pip install -e ".[dev]"` в venv backend (Python 3.12+).
+Запускает: black, ruff, pytest (backend), npm run build (frontend). Требует `pip install -e ".[dev]"` в venv backend.
 
 ```bash
 ./scripts/commit_checked.sh "сообщение коммита"
@@ -193,5 +166,6 @@ docker compose run --rm --no-deps --entrypoint "" backend sh -c "pip install pyt
 
 ## Документация
 
-- `DECISIONS.md` — ключевые решения и причины
+- `DECISIONS.md` — ключевые решения
+- `PROMPTS.md` — история промптов для AI
 - `.cursor/rules.md` — PROJECT RULES для Cursor
