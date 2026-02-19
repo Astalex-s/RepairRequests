@@ -530,3 +530,29 @@ Add GET /requests/{id}/history endpoint (dispatcher/master) returning list of ev
 Informative UI errors:
 Parse API error response (code, message, details). For validation errors (422), display field-level messages from details (e.g. "Телефон: обязательное поле"). For domain errors (400, 409), show message as-is. Add a small ErrorBanner component reused across pages.
 Keep audit minimal: no sensitive data; messages in Russian.
+
+----------------------------------------------------------------------------------------
+
+## 19.02.2026 20:40 мск DONE
+Prompt 24 - Create a GitHub Actions workflow file.
+Create a sample GitHub Actions workflow file (.github/workflows/workflow.yaml) for the RepairRequests project (FastAPI + React + PostgreSQL + Docker) with the following CI/CD behavior:
+Task 1 - Build and Push (GHCR)
+Build a Docker image for the project and push it to the GitHub Container Registry (ghcr.io).
+Use docker/login-action and docker/build-push-action.
+Tag the image:
+latest
+Commit SHA (short or full)
+Use GITHUB_TOKEN for authentication and set the required permissions (at least contents: read and packages: write).
+Task 2 — Deployment via SSH
+After successfully completing Task 1, connect to the remote server via SSH using secrets stored in GitHub (host, port, username, private key, etc.).
+On the server, run the following commands:
+Log in to GHCR (using the token stored in secrets),
+Download a new Docker image from GHCR,
+Stop/remove the old container (if any),
+Start a new container (or run `docker compose up -d` if the server uses Docker Compose).
+All server data and credentials should be obtained from GitHub secrets (there is no need to hardcode them).
+The workflow should be started when changes are pushed to the master branch.
+Additional requirements:
+Provide a clear list of required secrets (names and their meanings).
+Use a simple example workflow (one environment, one server).
+Do not include actual secret values ​​in the YAML file.
