@@ -36,3 +36,12 @@ export interface UserRead {
   role: string;
   createdAt?: string;
 }
+
+export interface AuditEvent {
+  id: number;
+  action: string;
+  actorUsername: string | null;
+  oldStatus: string | null;
+  newStatus: string | null;
+  createdAt: string;
+}

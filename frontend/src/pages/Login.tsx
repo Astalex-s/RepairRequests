@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, setToken } from "../api/client";
-import { ClientError } from "../api/client";
+import { ErrorBanner, parseErrorMessage } from "../components/ErrorBanner";
 
 export function Login() {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export function Login() {
       setToken(res.accessToken);
       navigate("/");
     } catch (err) {
-      setError(err instanceof ClientError ? err.body.message : "Ошибка входа");
+      setError(parseErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -56,7 +56,7 @@ export function Login() {
             required
           />
         </div>
-        {error && <p className="error">{error}</p>}
+        <ErrorBanner error={error} onDismiss={() => setError(null)} />
         <div className="row">
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? "Вход…" : "Войти"}

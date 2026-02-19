@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.audit import RequestAuditEvent
     from app.models.user import User
 
 
@@ -40,4 +41,9 @@ class RepairRequest(Base):
         "User",
         back_populates="repair_requests",
         foreign_keys=[master_id],
+    )
+    audit_events: Mapped[list["RequestAuditEvent"]] = relationship(
+        "RequestAuditEvent",
+        back_populates="request",
+        foreign_keys="RequestAuditEvent.request_id",
     )

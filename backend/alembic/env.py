@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import pool
 
 from app.db.base import Base
-from app.models import RepairRequest, User  # noqa: F401
+from app.models import RepairRequest, RequestAuditEvent, User  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

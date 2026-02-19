@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import type { RequestCreate } from "../api/types";
-import { ClientError } from "../api/client";
+import { ErrorBanner, parseErrorMessage } from "../components/ErrorBanner";
 
 export function PublicCreateRequest() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export function PublicCreateRequest() {
       await api.post("/requests", body);
       navigate("/", { state: { message: "Заявка создана" } });
     } catch (err) {
-      setError(err instanceof ClientError ? err.body.message : "Ошибка при создании заявки");
+      setError(parseErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +85,7 @@ export function PublicCreateRequest() {
             onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
           />
         </div>
-        {error && <p className="error">{error}</p>}
+        <ErrorBanner error={error} onDismiss={() => setError(null)} />
         <div className="row">
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? "Отправка…" : "Создать заявку"}

@@ -508,3 +508,25 @@ Constraints:
 Use async fixtures where needed (@pytest.fixture with scope="function").
 Run seed before auth tests if users come from seed, or create a test user in the fixture.
 Keep tests independent and isolated (no shared mutable state).
+
+----------------------------------------------------------------------------------------
+
+## 19.02.2026 19:10 мск DONE
+Prompt 23 - Audit log and informative UI error messages
+Make changes only in these files:
+backend/app/models/ (audit event model)
+backend/app/repositories/
+backend/app/services/
+backend/app/api/routers/
+backend/alembic/versions/
+frontend/src/pages/
+frontend/src/components/
+Follow PROJECT RULES (Cursor).
+Tasks:
+Audit log:
+Add RequestAuditEvent model (request_id, action, actor_id, actor_username, old_status, new_status, created_at). Create Alembic migration.
+Log events on: create, assign, cancel, take, done. Store in repository; call from services after each state change.
+Add GET /requests/{id}/history endpoint (dispatcher/master) returning list of events. Show history in a collapsible section or modal on Dispatcher and Master dashboards.
+Informative UI errors:
+Parse API error response (code, message, details). For validation errors (422), display field-level messages from details (e.g. "Телефон: обязательное поле"). For domain errors (400, 409), show message as-is. Add a small ErrorBanner component reused across pages.
+Keep audit minimal: no sensitive data; messages in Russian.

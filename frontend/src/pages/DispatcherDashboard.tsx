@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { api } from "../api/client";
-import type { RequestRead, MasterOption } from "../api/types";
-import { ClientError } from "../api/client";
+import type { RequestRead, MasterOption, AuditEvent } from "../api/types";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { ErrorBanner, parseErrorMessage } from "../components/ErrorBanner";
 
 const STATUS_OPTIONS = ["", "new", "assigned", "in_progress", "done", "cancelled"];
 
@@ -16,6 +16,8 @@ export function DispatcherDashboard() {
   const [assigning, setAssigning] = useState<number | null>(null);
   const [cancelling, setCancelling] = useState<number | null>(null);
   const [assignForm, setAssignForm] = useState<Record<number, string>>({});
+  const [historyOpen, setHistoryOpen] = useState<number | null>(null);
+  const [historyByRequest, setHistoryByRequest] = useState<Record<number, AuditEvent[]>>({});
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -25,7 +27,7 @@ export function DispatcherDashboard() {
       const data = await api.get<RequestRead[]>(`/requests${params}`);
       setRequests(data);
     } catch (err) {
-      setError(err instanceof ClientError ? err.body.message : "Ошибка загрузки");
+      setError(parseErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -54,7 +56,7 @@ export function DispatcherDashboard() {
       setAssignForm((f) => ({ ...f, [id]: "" }));
       await fetchRequests();
     } catch (err) {
-      setError(err instanceof ClientError ? err.body.message : "Ошибка назначения");
+      setError(parseErrorMessage(err));
     } finally {
       setAssigning(null);
     }
@@ -67,10 +69,33 @@ export function DispatcherDashboard() {
       await api.patch(`/requests/${id}/cancel`);
       await fetchRequests();
     } catch (err) {
-      setError(err instanceof ClientError ? err.body.message : "Ошибка отмены");
+      setError(parseErrorMessage(err));
     } finally {
       setCancelling(null);
     }
+  };
+
+  const toggleHistory = async (id: number) => {
+    if (historyOpen === id) {
+      setHistoryOpen(null);
+      return;
+    }
+    setHistoryOpen(id);
+    if (historyByRequest[id] !== undefined) return;
+    try {
+      const data = await api.get<AuditEvent[]>(`/requests/${id}/history`);
+      setHistoryByRequest((prev) => ({ ...prev, [id]: data }));
+    } catch {
+      setHistoryByRequest((prev) => ({ ...prev, [id]: [] }));
+    }
+  };
+
+  const ACTION_LABELS: Record<string, string> = {
+    create: "Создана",
+    assign: "Назначена",
+    cancel: "Отменена",
+    take: "Взята в работу",
+    done: "Выполнена",
   };
 
   return (
@@ -95,7 +120,7 @@ export function DispatcherDashboard() {
           Обновить
         </button>
       </div>
-      {error && <p className="error">{error}</p>}
+      <ErrorBanner error={error} onDismiss={() => setError(null)} />
       {loading ? (
         <p className="muted">Загрузка…</p>
       ) : (
@@ -110,11 +135,13 @@ export function DispatcherDashboard() {
                 <th>Статус</th>
                 <th>Мастер</th>
                 <th>Действия</th>
+                <th>История</th>
               </tr>
             </thead>
             <tbody>
               {requests.map((r) => (
-                <tr key={r.id}>
+                <React.Fragment key={r.id}>
+                <tr>
                   <td>{r.id}</td>
                   <td>{r.clientName}</td>
                   <td>{r.clientPhone}</td>
@@ -163,7 +190,41 @@ export function DispatcherDashboard() {
                       )}
                     </div>
                   </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => toggleHistory(r.id)}
+                      title="Показать историю изменений"
+                    >
+                      {historyOpen === r.id ? "▲ Скрыть" : "▼ История"}
+                    </button>
+                  </td>
                 </tr>
+                {historyOpen === r.id && (
+                  <tr>
+                    <td colSpan={8} style={{ padding: "var(--space-3)", background: "var(--color-neutral-100)", borderTop: "none" }}>
+                      {historyByRequest[r.id] === undefined ? (
+                        <p className="muted">Загрузка…</p>
+                      ) : historyByRequest[r.id].length === 0 ? (
+                        <p className="muted">Нет событий</p>
+                      ) : (
+                        <ul style={{ margin: 0, paddingLeft: "var(--space-5)", fontSize: "var(--font-size-0)" }}>
+                          {historyByRequest[r.id].map((e) => (
+                            <li key={e.id}>
+                              {ACTION_LABELS[e.action] ?? e.action}
+                              {e.actorUsername && ` (${e.actorUsername})`}
+                              {e.oldStatus && e.newStatus && `: ${e.oldStatus} → ${e.newStatus}`}
+                              {" — "}
+                              {new Date(e.createdAt).toLocaleString("ru")}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
